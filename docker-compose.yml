@@ -3,6 +3,8 @@ version: '2.1'
 networks:
   monitor-net:
     driver: bridge
+  proxy:
+    external: true
 
 volumes:
     prometheus_data: {}
@@ -28,8 +30,12 @@ services:
       - 9090
     networks:
       - monitor-net
+      - proxy
     labels:
-      org.label-schema.group: "monitoring"
+      - traefik.enable=true
+      - traefik.http.routers.pro.entryPoints=https
+      - traefik.http.services.pro.loadbalancer.server.port=9090
+      - traefik.docker.network=proxy
 
   alertmanager:
     image: prom/alertmanager:v0.26.0
@@ -44,8 +50,8 @@ services:
       - 9093
     networks:
       - monitor-net
-    labels:
-      org.label-schema.group: "monitoring"
+    # labels:
+    #   org.label-schema.group: "monitoring"
 
   nodeexporter:
     image: prom/node-exporter:v1.7.0
@@ -64,8 +70,8 @@ services:
       - 9100
     networks:
       - monitor-net
-    labels:
-      org.label-schema.group: "monitoring"
+    # labels:
+    #   org.label-schema.group: "monitoring"
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.47.2
@@ -84,8 +90,11 @@ services:
       - 8080
     networks:
       - monitor-net
-    labels:
-      org.label-schema.group: "monitoring"
+    # labels:
+    #   - traefik.enable=true
+    #   - traefik.http.routers.cadv.entryPoints=https
+    #   - traefik.http.services.cadv.loadbalancer.server.port=9000
+    #   - traefik.docker.network=proxy
 
   grafana:
     image: grafana/grafana:10.2.2
@@ -103,8 +112,13 @@ services:
       - 3000
     networks:
       - monitor-net
+      - proxy
     labels:
       org.label-schema.group: "monitoring"
+      - traefik.enable=true
+      - traefik.http.routers.graf.entryPoints=https
+      - traefik.http.services.graf.loadbalancer.server.port=3000
+      - traefik.docker.network=proxy
 
   pushgateway:
     image: prom/pushgateway:v1.6.2
@@ -114,26 +128,30 @@ services:
       - 9091
     networks:
       - monitor-net
+      - proxy
     labels:
-      org.label-schema.group: "monitoring"
+      - traefik.enable=true
+      - traefik.http.routers.push.entryPoints=https
+      - traefik.http.services.push.loadbalancer.server.port=9091
+      - traefik.docker.network=proxy
 
-  caddy:
-    image: caddy:2.7.5
-    container_name: caddy
-    ports:
-      - "3000:3000"
-      - "8080:8080"
-      - "9090:9090"
-      - "9093:9093"
-      - "9091:9091"
-    volumes:
-      - ./caddy:/etc/caddy
-    environment:
-      - ADMIN_USER=${ADMIN_USER:-admin}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
-      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH}
-    restart: unless-stopped
-    networks:
-      - monitor-net
-    labels:
-      org.label-schema.group: "monitoring"
+# caddy:
+#   image: caddy:2.7.5
+#   container_name: caddy
+#   ports:
+#     - "3000:3000"
+#     - "8080:8080"
+#     - "9090:9090"
+#     - "9093:9093"
+#     - "9091:9091"
+#   volumes:
+#     - ./caddy:/etc/caddy
+#   environment:
+#     - ADMIN_USER=${ADMIN_USER:-admin}
+#     - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+#     - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH}
+#   restart: unless-stopped
+#   networks:
+#     - monitor-net
+#   labels:
+#     org.label-schema.group: "monitoring"
