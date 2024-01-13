@@ -114,7 +114,6 @@ services:
       - monitor-net
       - proxy
     labels:
-      org.label-schema.group: "monitoring"
       - traefik.enable=true
       - traefik.http.routers.graf.entryPoints=https
       - traefik.http.services.graf.loadbalancer.server.port=3000
