@@ -7,8 +7,8 @@ networks:
     external: true
 
 volumes:
-    prometheus_data: {}
-    grafana_data: {}
+    prometheus_data: /share/CACHEDEV1_DATA/docker/appdata/prometheus_data
+    grafana_data: /share/CACHEDEV1_DATA/docker/appdata/grafana_data
 
 services:
 
@@ -103,10 +103,12 @@ services:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
     environment:
       - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS: 'grafana-clock-panel,grafana-simple-json-datasource'
     restart: unless-stopped
     expose:
       - 3000
